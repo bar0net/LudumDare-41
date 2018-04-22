@@ -17,6 +17,7 @@ public class Character : MonoBehaviour {
     protected virtual void Start()
     {
         _sr = GetComponentsInChildren<SpriteRenderer>();
+        currArmour = armour;
     }
 
     private void Update()
@@ -27,8 +28,8 @@ public class Character : MonoBehaviour {
 
             // Change the alpha of the character to reflect that it is invulnerable
             // because it is recovering from a recent hit
-            if (dmgTimer <= 0) PaintCharacter(new Color(1, 1, 1, 1));
-            else PaintCharacter(new Color(1, 1, 1, 0.8f));
+            if (dmgTimer <= 0) PaintCharacter(1);
+            else PaintCharacter(0.6f);
         }
     }
 
@@ -62,9 +63,13 @@ public class Character : MonoBehaviour {
         if (health <= 0) Die();
     }
     
-    void PaintCharacter(Color color)
+    void PaintCharacter(float alpha)
     {
-        for (int i = 0; i < _sr.Length; i++) _sr[i].color = color;
+        for (int i = 0; i < _sr.Length; i++)
+        {
+            Color c = _sr[i].color;
+            _sr[i].color = new Color(c.r,c.g,c.b,alpha);
+        }
     }
 
     protected virtual void Die() { }

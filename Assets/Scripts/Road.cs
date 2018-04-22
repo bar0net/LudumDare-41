@@ -4,6 +4,18 @@ using UnityEngine;
 
 public class Road : MonoBehaviour {
     public int damage = 1;
+    public GameObject[] hazards;
+    public float chanceSafe = 0.1f;
+
+    private void Start()
+    {
+        if (Random.value > chanceSafe && hazards.Length > 0)
+        {
+            int idx = Random.Range(0, hazards.Length);
+
+            GameObject go = (GameObject)Instantiate(hazards[idx], this.transform.position, this.transform.rotation, this.transform);
+        }
+    }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {

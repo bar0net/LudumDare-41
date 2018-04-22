@@ -8,7 +8,7 @@ public class Player : Character {
     [Header("Control")]
     public bool enableControl = true;
     public float acceleration = 2.0f;
-    public float breaking = 10.0f;
+    public float brakes = 10.0f;
     public float steering = 30.0f;
 
     public float dynamicLinearDrag = 0.1f;
@@ -19,9 +19,14 @@ public class Player : Character {
     [Header("Camera")]
     public Transform cam;
 
+    [Header("Audio")]
+    public AudioSource motorAudio;
+    public AudioSource impactAudio;
+
     Rigidbody2D _rb;
     GameManager _gm;
 
+    bool audioPlaying = false;
 	// Use this for initialization
 	protected override void Start () {
         base.Start();
@@ -49,14 +54,31 @@ public class Player : Character {
         Vector3 based_speed = this.transform.InverseTransformVector(_rb.velocity);
 
         // Accelerate if vertical input goes with the movement
-        // otherwise break
-        if (Mathf.Sign(move.y) == Mathf.Sign(based_speed.y))
-            _rb.AddForce( move.y * this.transform.up * acceleration);
-        else
-            _rb.AddForce(move.y * this.transform.up * breaking);
+        // otherwise brake
+        if (Mathf.Sign(move.y) == Mathf.Sign(based_speed.y)) _rb.AddForce( move.y * this.transform.up * acceleration);
+        else _rb.AddForce(move.y * this.transform.up * brakes);
+
+        // audio management
+        if (Mathf.Sign(move.y) == Mathf.Sign(based_speed.y) && Mathf.Abs(based_speed.y) > 0.2 && !audioPlaying)
+        {
+            audioPlaying = true;
+            motorAudio.Play();
+        }
+        else if (Mathf.Abs(based_speed.y) <= 0.8f && audioPlaying)
+        {
+            audioPlaying = false;
+            motorAudio.Pause();
+        }
+        
+        if (audioPlaying)
+        {
+            float ratio = Mathf.Abs(based_speed.y) / 20;
+            motorAudio.volume = Mathf.Lerp(0.1f, 0.3f, ratio);
+            motorAudio.pitch = Mathf.Lerp(-0.1f, 1.5f, ratio);
+        }
 
         // Apply lateral drag (kill lateral velocity)
-        based_speed.x *= (1 - lateralDrag);
+            based_speed.x *= (1 - lateralDrag);
         _rb.velocity = this.transform.TransformVector(based_speed);
 	}
 
@@ -65,6 +87,9 @@ public class Player : Character {
     public override void Hit(int damage, bool healthOnly = false, float x = 0, float y = 0)
     {
         base.Hit(damage, healthOnly, x, y);
+
+        impactAudio.pitch = Random.Range(0.90f, 1.10f);
+        impactAudio.Play();
 
         _gm.UpdateHealthUI(health, currArmour, armour - currArmour);
 
@@ -80,5 +105,15 @@ public class Player : Character {
     {
         _gm.UpdateHealthUI(health, currArmour, armour - currArmour);
         _gm.GameOver();
+    }
+
+    public void SetCarColor(string color)
+    {
+        Color c;
+        SpriteRenderer _sr = this.transform.GetChild(0).GetComponent<SpriteRenderer>();
+        ColorUtility.TryParseHtmlString(color, out c);
+
+        if (c != null) _sr.color = c;
+        else _sr.color = new Color(0, 0, 0, 1);
     }
 }

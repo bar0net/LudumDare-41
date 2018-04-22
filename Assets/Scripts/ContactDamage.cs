@@ -10,7 +10,6 @@ public class ContactDamage : MonoBehaviour {
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Character ch = collision.gameObject.GetComponentInParent<Character>();
-        Debug.Log(collision.tag);
 
         if (ch != null)
         {
