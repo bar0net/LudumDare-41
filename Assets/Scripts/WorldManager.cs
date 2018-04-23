@@ -114,7 +114,15 @@ public class WorldManager : MonoBehaviour {
                 break;
 
             case interactions.Track:
-                Cars car = cars[PlayerPrefs.GetInt("new_car", 0)];
+                int id = PlayerPrefs.GetInt("new_car", 0);
+
+                if (id < 0 || id >= cars.Length)
+                {
+                    id = 0;
+                    Debug.LogWarning("Car ID out of range. [" + id.ToString() + "]");
+                }
+
+                Cars car = cars[id];
 
                 // Reset spawning position
                 PlayerPrefs.DeleteKey("world_x");
@@ -144,8 +152,8 @@ public class WorldManager : MonoBehaviour {
                 break;
 
             case interactions.Custom:
-                Debug.Log("Custom");
                 PlayerPrefs.SetFloat("world_x", GameObject.FindWithTag("Player").transform.position.x);
+                GetComponent<SceneLoader>().Load("Perks");
                 break;
         }
     }
@@ -153,7 +161,6 @@ public class WorldManager : MonoBehaviour {
     carTypes GetNewCar()
     {
         string unlocked = PlayerPrefs.GetString("cars", "1000");
-        Debug.Log("Cars: " + unlocked);
         List<int> available = new List<int>();
 
         for (int i = 0; i < unlocked.Length; i++)

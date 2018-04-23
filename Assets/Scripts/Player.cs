@@ -1,9 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : Character {
     const float _DRAG_THRESHOLD_ = 0.05f;
+
+    const float _MIN_SPEED_RANGE_ = 7.5f;
+    const float _MAX_SPEED_RANGE_ = 15.0f;
+
+    [Header("Perks Params")]
+    public float boostDelay = 4.0f;
 
     [Header("Control")]
     public bool enableControl = true;
@@ -27,31 +34,57 @@ public class Player : Character {
     GameManager _gm;
 
     bool audioPlaying = false;
+
+    bool canBoost = true;
+    float boostTimer = 0;
+
 	// Use this for initialization
 	protected override void Start () {
         base.Start();
+
+        canBoost = (PlayerPrefs.GetInt("boost", 0) == 1);
 
         _rb = this.GetComponent<Rigidbody2D>();
         _gm = FindObjectOfType<GameManager>();
 
         _gm.UpdateHealthUI(health, currArmour, armour - currArmour);
 	}
-	
-	// Update is called once per frame
-	void FixedUpdate () {
-        if (!enableControl) return;
+
+    // Update is called once per frame
+    private void LateUpdate()
+    {
+        if (canBoost)
+        {
+            if (boostTimer > 0) boostTimer -= Time.deltaTime;
+            else if (boostTimer < 0) boostTimer = 0;
+
+            _gm.UpdateBoostUI((boostDelay - boostTimer) / boostDelay);
+        }
+    }
+
+    void FixedUpdate () {
+        if (!enableControl || health <= 0) return;
 
         Vector2 move = new Vector2(-Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-
-        // Update drag coeficient
-        if (Mathf.Abs(move.y) > _DRAG_THRESHOLD_) _rb.drag = dynamicLinearDrag;
-        else _rb.drag = staticlinearDrag;
 
         // Apply Steering
         this.transform.Rotate(0, 0, move.x * steering * Time.fixedDeltaTime);
 
         // Get Velocity in base defined as (0,1) is the car's forward direction
         Vector3 based_speed = this.transform.InverseTransformVector(_rb.velocity);
+
+        // Boost
+        if (Input.GetKeyDown(KeyCode.Space) && canBoost && boostTimer <= 0)
+        {
+            _rb.AddForce(this.transform.up * 400);
+            boostTimer = boostDelay;
+        }
+
+        // Update drag coeficient
+        float speedRatio = (based_speed.y - _MIN_SPEED_RANGE_) / (_MAX_SPEED_RANGE_ - _MIN_SPEED_RANGE_);
+        if (Mathf.Abs(move.y) > _DRAG_THRESHOLD_) _rb.drag = Mathf.Lerp(dynamicLinearDrag, 0.95f, speedRatio);
+        else _rb.drag = staticlinearDrag;
+
 
         // Accelerate if vertical input goes with the movement
         // otherwise brake

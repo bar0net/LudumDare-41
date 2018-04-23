@@ -11,7 +11,6 @@ public class Projectile : MonoBehaviour {
     public Transform bucket = null;
 	// Use this for initialization
 	void OnEnable () {
-        Debug.Log(this.gameObject.name + " enabled");
         timer = lifeSpan;
 	}
 	

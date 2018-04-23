@@ -59,27 +59,6 @@ public class BoxManager : MonoBehaviour {
             PlayerPrefs.SetString("techs", techs);
     }
 
-    void UpdateUnlockedTech(int id)
-    {
-        buttons[id].GetComponent<Image>().color = unlockedColor;
-        buttons[id].GetComponent<Button>().enabled = false;
-
-        if (!linkDict.ContainsKey(id)) return;
-
-        for (int j = 0; j < linkDict[id].Count; j++)
-        {
-            int idx = linkDict[id][j];
-            buttons[idx].GetComponent<Button>().interactable = true;
-
-            if (money < initialCost)
-            {
-                buttons[idx].GetComponent<Image>().color = unaffordableColor;
-                buttons[idx].GetComponent<Button>().enabled = false;
-            }
-            else buttons[idx].GetComponent<Image>().color = lockedColor;
-        }
-    }
-
     public void UnlockTech(int id)
     {
         // Update techs string and save data
@@ -129,8 +108,11 @@ public class BoxManager : MonoBehaviour {
     {
         if (money < initialCost) return;
 
+        //Debug.Log(stat);
+        //Debug.Log(PlayerPrefs.GetInt(stat, -1));
         int value = PlayerPrefs.GetInt(stat, 0);
         PlayerPrefs.SetInt(stat, value + 1);
+        //Debug.Log(PlayerPrefs.GetInt(stat, -1));
     }
 
     void UpdateCostUI ()
@@ -141,20 +123,63 @@ public class BoxManager : MonoBehaviour {
 
     void UpdateTechUI()
     {
-        for (int i = 0; i < techs.Length; i++)
+        RecursiveFill(0, true);
+    }
+
+    void RecursiveFill(int id, bool prevEnabled)
+    {
+        if (techs[id] == '1')
         {
-            if (techs[i] == '1')
-            {
-                UpdateUnlockedTech(i);
-                initialCost++;
-            }
-            else
-            {
-                if (money < initialCost && !buttons[i].GetComponent<Button>().enabled)
-                    buttons[i].GetComponent<Image>().color = unaffordableColor;
-                else
-                    buttons[i].GetComponent<Image>().color = lockedColor;
-            }
+            PaintOwnedTech(id);
+            FillNext(id, true);
+            return;
         }
+
+        if (prevEnabled) PaintAllowedTech(id);
+        else PaintDisabledTech(id);
+        FillNext(id, false);
+    }
+
+    void FillNext(int id, bool prevEnabled)
+    {
+            if (linkDict.ContainsKey(id))
+            {
+                for (int i = 0; i < linkDict[id].Count; i++) RecursiveFill(linkDict[id][i], prevEnabled);
+            }
+    }
+
+    void PaintDisabledTech(int id)
+    {
+        buttons[id].GetComponent<Image>().color = lockedColor;
+        buttons[id].GetComponent<Button>().enabled = true;
+        buttons[id].GetComponent<Button>().interactable = false;
+    }
+
+    void PaintOwnedTech(int id)
+    {
+        buttons[id].GetComponent<Image>().color = unlockedColor;
+        buttons[id].GetComponent<Button>().enabled = false;
+    }
+
+    void PaintAllowedTech(int id)
+    {
+        if (money < initialCost)
+        {
+            buttons[id].GetComponent<Image>().color = unaffordableColor;
+            buttons[id].GetComponent<Button>().enabled = false;
+        }
+        else
+        {
+            buttons[id].GetComponent<Image>().color = lockedColor;
+            buttons[id].GetComponent<Button>().enabled = true;
+            buttons[id].GetComponent<Button>().interactable = true;
+        }
+    }
+
+    public void MoreMoney()
+    {
+        money += 10;
+        UpdateCostUI();
+        RecursiveFill(0, true);
     }
 }

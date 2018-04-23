@@ -9,6 +9,8 @@ public class Road : MonoBehaviour {
 
     private void Start()
     {
+        chanceSafe += (PlayerPrefs.GetInt("obstacles", 0) * 0.05f);
+
         if (Random.value > chanceSafe && hazards.Length > 0)
         {
             int idx = Random.Range(0, hazards.Length);

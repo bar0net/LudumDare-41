@@ -15,6 +15,12 @@ public class GameManager : MonoBehaviour {
     public Text gameOverGates;
     public Text gameOverMoney;
     public Text gameOverTime;
+    [Space(10)]
+    public GameObject boostPanel;   
+    public Image[] boostSegments;
+    public Text boostText;
+    public Color boostFillColor = Color.magenta;
+    public Color boostEmptyColor = Color.white;
 
     [Space(10)]
     public Text moneyText;
@@ -30,17 +36,23 @@ public class GameManager : MonoBehaviour {
     public AudioClip deathAudio;
 
     int money = 0;
-    int extra_money = 0;
     int gate_count = 0;
     bool isGameOver = false;
+
+    int extra_money = 0;
+    int extra_time = 0;
 
 	// Use this for initialization
 	void Start () {
         gameoverPanel.SetActive(false);
 
+        boostPanel.SetActive(PlayerPrefs.GetInt("boost", 0) == 1);
+
         money = PlayerPrefs.GetInt("money", 0);
         moneyText.text = "$ " + money.ToString();
+
         extra_money = PlayerPrefs.GetInt("extra_money", 0);
+        extra_time = PlayerPrefs.GetInt("extra_time", 0);
 
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         for (int i = players.Length; i > 0; i--) Destroy(players[i - 1]);
@@ -99,15 +111,18 @@ public class GameManager : MonoBehaviour {
         timer -= Time.deltaTime;
         timerText.text = Mathf.Max(0, timer).ToString("F2");
 
-        if (timer <= 0) GameOver();
+        if (timer <= 0 && !isGameOver) GameOver();
 	}
 
     // Trigger Game Over State
     public void GameOver()
     {
         AudioSource _as = GetComponent<AudioSource>();
+        //AudioSource.PlayClipAtPoint(deathAudio, Vector3.zero);
         _as.Stop();
-        _as.PlayOneShot(deathAudio);
+        _as.clip = deathAudio;
+        _as.time = 0;
+        _as.Play();
         _as.loop = false;
 
         gameoverTitle.text = "Totaled!";
@@ -124,7 +139,7 @@ public class GameManager : MonoBehaviour {
     // Extend the remaining time
     public void AddTime(float time)
     {
-        timer += time;
+        timer += time + extra_time;
         gate_count++;
     }
 
@@ -158,8 +173,22 @@ public class GameManager : MonoBehaviour {
 
     public void AddMoney(int value)
     {
-        money += value + extra_money;
+        if (Random.value < 0.5) money += value + extra_money;
+        else money += value;
+
         moneyText.text = "$ " + money.ToString();
         PlayerPrefs.SetInt("money", money);
+    }
+
+    public void UpdateBoostUI(float ratio)
+    {
+        for (int i = 0; i < boostSegments.Length; i++)
+        {
+            if (ratio >= (float)(i+1) / (float)(boostSegments.Length)) boostSegments[i].color = boostFillColor;
+            else boostSegments[i].color = boostEmptyColor;
+        }
+
+        if (ratio < 1) boostText.color = boostEmptyColor;
+        else boostText.color = boostFillColor;
     }
 }

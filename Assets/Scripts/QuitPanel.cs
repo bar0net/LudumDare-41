@@ -7,8 +7,16 @@ public class QuitPanel : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (Input.GetKeyDown(KeyCode.Escape) && !quitPanel.activeSelf) quitPanel.SetActive(true);
+        if (Input.GetKeyDown(KeyCode.Escape) && !quitPanel.activeSelf)
+        {
+            quitPanel.SetActive(true);
+            Time.timeScale = 0;
+        }
         else if (Input.GetKeyDown(KeyCode.Escape) && quitPanel.activeSelf) Application.Quit();
-        else if (Input.GetKeyDown(KeyCode.E) && quitPanel.activeSelf) quitPanel.SetActive(false);
+        else if (Input.GetKeyDown(KeyCode.E) && quitPanel.activeSelf)
+        {
+           quitPanel.SetActive(false);
+           Time.timeScale = 1;
+        }
     }
 }
