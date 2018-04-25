@@ -83,6 +83,15 @@ public class BoxManager : MonoBehaviour {
         PlayerPrefs.SetInt("box_steer", 0);
         PlayerPrefs.SetInt("box_brake", 0);
         PlayerPrefs.SetInt("box_money", 0);
+
+        PlayerPrefs.SetInt("perk_gold", 0);
+        PlayerPrefs.SetInt("perk_time", 0);
+        PlayerPrefs.SetInt("perk_boost", 0);
+        PlayerPrefs.SetInt("perk_obstacles", 0);
+
+        initialCost = 4; // TODO: Un-hardcode this
+        UpdateCostUI();
+        UpdateTechUI();
     }
 
     public void UnlockCar(int car)
@@ -106,13 +115,10 @@ public class BoxManager : MonoBehaviour {
 
     public void IncreaseStat(string stat)
     {
-        if (money < initialCost) return;
+        // if (money < initialCost) return;
 
-        //Debug.Log(stat);
-        //Debug.Log(PlayerPrefs.GetInt(stat, -1));
         int value = PlayerPrefs.GetInt(stat, 0);
         PlayerPrefs.SetInt(stat, value + 1);
-        //Debug.Log(PlayerPrefs.GetInt(stat, -1));
     }
 
     void UpdateCostUI ()
